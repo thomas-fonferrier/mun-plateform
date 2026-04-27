@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getServerSupabaseClient } from '@/lib/supabase-server';
 
 export async function POST(req: NextRequest) {
+  const supabase = getServerSupabaseClient();
   const { motionId, participantToken, vote } = await req.json();
 
   if (!motionId || !participantToken || !vote) {
