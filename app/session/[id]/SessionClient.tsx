@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Copy, Check, LogOut, Shield, Lock, Unlock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -20,6 +21,7 @@ interface SessionClientProps {
 }
 
 export default function SessionClient({ sessionId }: SessionClientProps) {
+  const router = useRouter();
   const [session, setSession] = useState<{ id: string; name: string; created_at: string } | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [sessionError, setSessionError] = useState('');
@@ -43,6 +45,7 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
   const [votingLoading, setVotingLoading] = useState(false);
   const [timerLoading, setTimerLoading] = useState(false);
   const [motionLoading, setMotionLoading] = useState(false);
+  const [endingSessionLoading, setEndingSessionLoading] = useState(false);
 
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -338,6 +341,38 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
     setAdminToken('');
   };
 
+  const handleEndSession = async () => {
+    if (!session || !isAdmin) return;
+
+    const confirmed = window.confirm(
+      'End this session for everyone? This will permanently remove the session and all related data.'
+    );
+    if (!confirmed) return;
+
+    setEndingSessionLoading(true);
+    try {
+      const res = await fetch('/api/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: session.id, adminToken }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to end session');
+      }
+
+      localStorage.removeItem(`admin_token_${session.id}`);
+      localStorage.removeItem(`participant_token_${session.id}`);
+      router.push('/');
+      router.refresh();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Unable to end session');
+    } finally {
+      setEndingSessionLoading(false);
+    }
+  };
+
   const copySessionId = () => {
     navigator.clipboard.writeText(session.id);
     setCopied(true);
@@ -561,8 +596,10 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
                     onTimerStop={handleTimerStop}
                     onMotionCreate={handleMotionCreate}
                     onMotionClose={handleMotionClose}
+                    onEndSession={handleEndSession}
                     timerLoading={timerLoading}
                     motionLoading={motionLoading}
+                    endingSessionLoading={endingSessionLoading}
                   />
                 </motion.div>
               )}

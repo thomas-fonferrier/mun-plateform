@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Timer, FilePlus, ChevronDown, StopCircle, CheckCircle, XCircle, MinusCircle, ChevronRight, Users } from 'lucide-react';
+import { Shield, Timer, FilePlus, ChevronDown, StopCircle, CheckCircle, XCircle, MinusCircle, ChevronRight, Users, Power } from 'lucide-react';
 import { Motion, Participant } from '@/lib/types';
 import { COUNTRIES } from '@/lib/countries';
 
@@ -13,8 +13,10 @@ interface AdminPanelProps {
   onTimerStop: () => void;
   onMotionCreate: (title: string, description: string) => void;
   onMotionClose: (motionId: string, status: 'passed' | 'failed' | 'withdrawn') => void;
+  onEndSession: () => void;
   timerLoading: boolean;
   motionLoading: boolean;
+  endingSessionLoading: boolean;
 }
 
 const PRESET_TIMES = [30, 60, 90, 120, 180, 300];
@@ -26,8 +28,10 @@ export default function AdminPanel({
   onTimerStop,
   onMotionCreate,
   onMotionClose,
+  onEndSession,
   timerLoading,
   motionLoading,
+  endingSessionLoading,
 }: AdminPanelProps) {
   const [tab, setTab] = useState<'timer' | 'motion'>('timer');
 
@@ -326,6 +330,17 @@ export default function AdminPanel({
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="mt-5 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+          <button
+            onClick={onEndSession}
+            disabled={endingSessionLoading}
+            className="btn btn-danger w-full"
+          >
+            <Power size={14} />
+            {endingSessionLoading ? 'Ending session...' : 'End Session'}
+          </button>
+        </div>
       </div>
     </div>
   );
