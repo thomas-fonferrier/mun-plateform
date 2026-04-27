@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, LogIn, Plus, Shield, Users, Zap, ChevronRight, Lock } from 'lucide-react';
-import { hashToken, generateToken } from '@/lib/utils';
+import { hashToken } from '@/lib/utils';
 
 type Mode = 'home' | 'create' | 'join';
 
@@ -104,7 +104,7 @@ export default function HomePage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-8 py-6">
+      <header className="relative z-10 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'var(--gold-dim)', border: '1px solid rgba(201,162,39,0.3)' }}>
             <Globe size={18} style={{ color: 'var(--gold)' }} />
@@ -122,7 +122,7 @@ export default function HomePage() {
       </header>
 
       {/* Main content */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-12">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-8 sm:py-12">
         <AnimatePresence mode="wait">
           {mode === 'home' && (
             <motion.div
@@ -141,13 +141,13 @@ export default function HomePage() {
                 className="flex justify-center mb-8"
               >
                 <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center pulse-ring"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center pulse-ring"
                   style={{
                     background: 'linear-gradient(135deg, rgba(201,162,39,0.2) 0%, rgba(201,162,39,0.05) 100%)',
                     border: '1px solid rgba(201,162,39,0.4)',
                   }}
                 >
-                  <Globe size={38} style={{ color: 'var(--gold)' }} />
+                  <Globe size={32} style={{ color: 'var(--gold)' }} />
                 </div>
               </motion.div>
 
@@ -155,7 +155,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-5xl font-bold mb-4 tracking-tight"
+                className="text-3xl sm:text-5xl font-bold mb-4 tracking-tight px-2"
               >
                 Model{' '}
                 <span className="gold-text">United Nations</span>
@@ -165,7 +165,7 @@ export default function HomePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-lg mb-12"
+                className="text-base sm:text-lg mb-8 sm:mb-12 px-2"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 Real-time diplomatic sessions with live voting, speaker timers, and motion tracking.
@@ -176,7 +176,7 @@ export default function HomePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="flex flex-wrap justify-center gap-3 mb-12"
+                className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-12"
               >
                 {[
                   { icon: Zap, label: 'Real-time updates' },
@@ -185,7 +185,7 @@ export default function HomePage() {
                 ].map(({ icon: Icon, label }) => (
                   <div
                     key={label}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full text-sm"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm"
                     style={{
                       background: 'rgba(255,255,255,0.04)',
                       border: '1px solid var(--border)',
@@ -203,18 +203,18 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
               >
                 <button
                   onClick={() => setMode('create')}
-                  className="btn btn-gold text-base px-8 py-3"
+                  className="btn btn-gold text-sm sm:text-base px-6 sm:px-8 py-3"
                 >
                   <Plus size={18} />
                   Create Session
                 </button>
                 <button
                   onClick={() => setMode('join')}
-                  className="btn btn-ghost text-base px-8 py-3"
+                  className="btn btn-ghost text-sm sm:text-base px-6 sm:px-8 py-3"
                 >
                   <LogIn size={18} />
                   Join Session
@@ -233,7 +233,7 @@ export default function HomePage() {
               className="w-full max-w-md"
             >
               <div
-                className="rounded-2xl p-8"
+                className="rounded-2xl p-5 sm:p-8"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 <div className="flex items-center gap-3 mb-6">
@@ -332,7 +332,7 @@ export default function HomePage() {
               className="w-full max-w-md"
             >
               <div
-                className="rounded-2xl p-8"
+                className="rounded-2xl p-5 sm:p-8"
                 style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
               >
                 <div className="flex items-center gap-3 mb-6">

@@ -69,7 +69,7 @@ export default function ActiveMotion({
       }}
     >
       {/* Header */}
-      <div className="px-6 pt-5 pb-4 border-b" style={{ borderColor: 'var(--border)' }}>
+      <div className="px-4 sm:px-6 pt-5 pb-4 border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="flex items-start gap-3">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -95,7 +95,7 @@ export default function ActiveMotion({
       </div>
 
       {/* Vote results */}
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
           Current Results — {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} cast
         </p>
@@ -108,7 +108,7 @@ export default function ActiveMotion({
 
       {/* Voting buttons for participants */}
       {myParticipant && (
-        <div className="px-6 pb-5">
+        <div className="px-4 sm:px-6 pb-5">
           <div
             className="rounded-xl p-4"
             style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)' }}
@@ -116,7 +116,7 @@ export default function ActiveMotion({
             <p className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
               Cast Your Vote — {myParticipant.country_name}
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {([
                 { value: 'for', label: 'In Favour', icon: CheckCircle, className: 'btn-success' },
                 { value: 'against', label: 'Against', icon: XCircle, className: 'btn-danger' },
@@ -127,7 +127,7 @@ export default function ActiveMotion({
                   whileTap={{ scale: 0.97 }}
                   onClick={() => onVote(currentMotion.id, value)}
                   disabled={votingLoading}
-                  className={`btn ${className} py-2.5 flex-col gap-1.5 h-auto`}
+                  className={`btn ${className} py-2.5 sm:py-2.5 flex-row sm:flex-col justify-center gap-2 sm:gap-1.5 h-auto`}
                   style={
                     myVote === value
                       ? {
@@ -140,7 +140,7 @@ export default function ActiveMotion({
                   }
                 >
                   <Icon size={16} />
-                  <span className="text-xs">{label}</span>
+                  <span className="text-xs sm:text-xs">{label}</span>
                 </motion.button>
               ))}
             </div>
@@ -158,7 +158,7 @@ export default function ActiveMotion({
 
       {/* Country vote list */}
       {votes.length > 0 && (
-        <div className="px-6 pb-5">
+        <div className="px-4 sm:px-6 pb-5">
           <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
             Delegation Votes
           </p>

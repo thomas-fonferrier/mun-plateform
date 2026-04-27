@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Globe, X, Check } from 'lucide-react';
+import { Search, Globe, Check } from 'lucide-react';
 import { COUNTRIES } from '@/lib/countries';
 import { Country } from '@/lib/types';
 
@@ -34,7 +34,7 @@ export default function CountryPicker({ takenCodes, onSelect, loading }: Country
         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-3 mb-4">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -62,7 +62,7 @@ export default function CountryPicker({ takenCodes, onSelect, loading }: Country
         </div>
 
         {/* Country grid */}
-        <div className="p-4 overflow-y-auto" style={{ maxHeight: '55vh' }}>
+        <div className="p-3 sm:p-4 overflow-y-auto" style={{ maxHeight: '55vh' }}>
           {available.length === 0 ? (
             <div className="text-center py-12" style={{ color: 'var(--text-secondary)' }}>
               <Globe size={32} className="mx-auto mb-3 opacity-30" />
@@ -108,24 +108,27 @@ export default function CountryPicker({ takenCodes, onSelect, loading }: Country
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t flex items-center justify-between gap-4" style={{ borderColor: 'var(--border)' }}>
+        <div
+          className="px-4 sm:px-6 py-4 border-t flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4"
+          style={{ borderColor: 'var(--border)' }}
+        >
           <AnimatePresence>
             {selected && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 min-w-0"
               >
                 <span className="text-xl">{selected.flag}</span>
-                <span className="text-sm font-medium">{selected.name}</span>
+                <span className="text-sm font-medium truncate">{selected.name}</span>
               </motion.div>
             )}
           </AnimatePresence>
-          <div className="flex gap-2 ml-auto">
+          <div className="flex gap-2 sm:ml-auto">
             <button
               disabled={!selected || loading}
               onClick={() => selected && onSelect(selected)}
-              className="btn btn-gold px-6"
+              className="btn btn-gold px-4 sm:px-6 w-full sm:w-auto"
             >
               {loading ? (
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">

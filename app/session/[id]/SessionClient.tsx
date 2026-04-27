@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, Copy, Check, LogOut, Shield, Lock, Unlock, ChevronRight } from 'lucide-react';
+import { Globe, Copy, Check, LogOut, Shield, Lock, Unlock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { generateToken, hashToken } from '@/lib/utils';
 import { Participant, SpeakerTimer, Motion, Vote } from '@/lib/types';
@@ -13,6 +13,7 @@ import ActiveMotion from '@/components/ActiveMotion';
 import MotionHistory from '@/components/MotionHistory';
 import ParticipantsList from '@/components/ParticipantsList';
 import AdminPanel from '@/components/AdminPanel';
+import QRCode from 'qrcode';
 
 interface SessionClientProps {
   session: { id: string; name: string; created_at: string };
@@ -35,6 +36,7 @@ export default function SessionClient({ session }: SessionClientProps) {
   const [adminError, setAdminError] = useState('');
 
   const [copied, setCopied] = useState(false);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [votingLoading, setVotingLoading] = useState(false);
   const [timerLoading, setTimerLoading] = useState(false);
   const [motionLoading, setMotionLoading] = useState(false);
@@ -266,6 +268,24 @@ export default function SessionClient({ session }: SessionClientProps) {
 
   const takenCodes = participants.map((p) => p.country_code);
 
+  useEffect(() => {
+    const generateQrCode = async () => {
+      try {
+        const joinUrl = `${window.location.origin}/session/${session.id}`;
+        const dataUrl = await QRCode.toDataURL(joinUrl, {
+          width: 256,
+          margin: 1,
+          color: { dark: '#f0f4ff', light: '#0000' },
+        });
+        setQrCodeDataUrl(dataUrl);
+      } catch {
+        setQrCodeDataUrl('');
+      }
+    };
+
+    generateQrCode();
+  }, [session.id]);
+
   return (
     <>
       {/* Country picker modal */}
@@ -321,21 +341,21 @@ export default function SessionClient({ session }: SessionClientProps) {
         )}
       </AnimatePresence>
 
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col pb-4 sm:pb-0">
         {/* Header */}
         <header
-          className="sticky top-0 z-20 flex items-center gap-4 px-4 sm:px-6 py-3 border-b"
+          className="sticky top-0 z-20 flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-6 py-3 border-b"
           style={{
             background: 'rgba(8,13,26,0.9)',
             backdropFilter: 'blur(20px)',
             borderColor: 'var(--border)',
           }}
         >
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'var(--gold-dim)', border: '1px solid rgba(201,162,39,0.3)' }}>
               <Globe size={14} style={{ color: 'var(--gold)' }} />
             </div>
-            <h1 className="font-semibold text-sm truncate">{session.name}</h1>
+            <h1 className="font-semibold text-sm truncate max-w-[52vw] sm:max-w-none">{session.name}</h1>
             {isAdmin && (
               <span className="badge badge-gold flex-shrink-0">
                 <Shield size={9} /> Chair
@@ -343,7 +363,7 @@ export default function SessionClient({ session }: SessionClientProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto flex-shrink-0">
             {/* Session ID copy */}
             <button
               onClick={copySessionId}
@@ -357,11 +377,11 @@ export default function SessionClient({ session }: SessionClientProps) {
 
             {/* Admin controls */}
             {isAdmin ? (
-              <button onClick={handleAdminLogout} className="btn btn-ghost text-xs px-2.5 py-1.5" title="Exit admin mode">
-                <Unlock size={13} /> Admin
+              <button onClick={handleAdminLogout} className="btn btn-ghost text-[11px] sm:text-xs px-2 py-1.5" title="Exit admin mode">
+                <Unlock size={13} /> <span className="hidden sm:inline">Admin</span>
               </button>
             ) : (
-              <button onClick={() => setShowAdminLogin(true)} className="btn btn-ghost text-xs px-2.5 py-1.5" title="Admin login">
+              <button onClick={() => setShowAdminLogin(true)} className="btn btn-ghost text-[11px] sm:text-xs px-2 py-1.5" title="Admin login">
                 <Lock size={13} />
                 <span className="hidden sm:inline">Chair Login</span>
               </button>
@@ -377,29 +397,29 @@ export default function SessionClient({ session }: SessionClientProps) {
                   {COUNTRIES.find((c) => c.code === participant.country_code)?.flag}
                   <span>{participant.country_name}</span>
                 </div>
-                <button onClick={handleLeave} className="btn btn-ghost text-xs px-2.5 py-1.5" title="Leave session">
+                <button onClick={handleLeave} className="btn btn-ghost text-[11px] sm:text-xs px-2 py-1.5" title="Leave session">
                   <LogOut size={13} />
                 </button>
               </div>
             )}
 
             {!participant && !showCountryPicker && (
-              <button onClick={() => setShowCountryPicker(true)} className="btn btn-gold text-xs px-3 py-1.5">
-                <Globe size={13} /> Join as Country
+              <button onClick={() => setShowCountryPicker(true)} className="btn btn-gold text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5">
+                <Globe size={13} /> <span className="hidden sm:inline">Join as Country</span><span className="sm:hidden">Join</span>
               </button>
             )}
           </div>
         </header>
 
         {/* Main grid */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 p-4 sm:p-6 max-w-7xl mx-auto w-full">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4 p-3 sm:p-6 max-w-7xl mx-auto w-full">
           {/* Left column */}
           <div className="space-y-4 min-w-0">
             {/* Session info banner */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl px-5 py-4 flex items-center justify-between gap-4"
+              className="rounded-2xl px-4 sm:px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4"
               style={{
                 background: 'linear-gradient(135deg, rgba(20,30,53,0.8) 0%, rgba(15,22,40,0.8) 100%)',
                 border: '1px solid var(--border)',
@@ -409,18 +429,15 @@ export default function SessionClient({ session }: SessionClientProps) {
                 <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'var(--gold)', fontWeight: 600 }}>
                   Session in Progress
                 </p>
-                <h2 className="text-xl font-bold">{session.name}</h2>
+                <h2 className="text-lg sm:text-xl font-bold">{session.name}</h2>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                   {participants.length} delegation{participants.length !== 1 ? 's' : ''} present
                 </p>
               </div>
-              <button
-                onClick={copySessionId}
-                className="flex-shrink-0 flex flex-col items-end gap-1"
-              >
+              <button onClick={copySessionId} className="w-full sm:w-auto flex-shrink-0 flex flex-col items-start sm:items-end gap-1">
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Session ID</span>
                 <span
-                  className="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1.5 rounded-lg transition-colors"
+                  className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 text-xs font-mono px-2.5 py-1.5 rounded-lg transition-colors"
                   style={{
                     background: 'rgba(255,255,255,0.05)',
                     border: '1px solid var(--border)',
@@ -478,8 +495,6 @@ export default function SessionClient({ session }: SessionClientProps) {
                   transition={{ duration: 0.3 }}
                 >
                   <AdminPanel
-                    sessionId={session.id}
-                    adminToken={adminToken}
                     participants={participants}
                     activeMotion={activeMotion}
                     onTimerStart={handleTimerStart}
@@ -527,6 +542,30 @@ export default function SessionClient({ session }: SessionClientProps) {
                 <span className="truncate">{session.id}</span>
                 {copied ? <Check size={12} /> : <Copy size={12} className="flex-shrink-0" />}
               </button>
+
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
+                <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Or scan this QR code to open the session
+                </p>
+                <div className="flex justify-center">
+                  {qrCodeDataUrl ? (
+                    <div
+                      className="rounded-xl p-2"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)' }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={qrCodeDataUrl} alt="QR code to join this session" className="w-36 h-36" />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-36 h-36 rounded-xl flex items-center justify-center text-xs"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                    >
+                      Generating QR...
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>

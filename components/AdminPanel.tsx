@@ -7,8 +7,6 @@ import { Motion, Participant } from '@/lib/types';
 import { COUNTRIES } from '@/lib/countries';
 
 interface AdminPanelProps {
-  sessionId: string;
-  adminToken: string;
   participants: Participant[];
   activeMotion: Motion | null;
   onTimerStart: (countryCode: string, countryName: string, seconds: number) => void;
@@ -22,8 +20,6 @@ interface AdminPanelProps {
 const PRESET_TIMES = [30, 60, 90, 120, 180, 300];
 
 export default function AdminPanel({
-  sessionId,
-  adminToken,
   participants,
   activeMotion,
   onTimerStart,
@@ -44,7 +40,6 @@ export default function AdminPanel({
   const [motionTitle, setMotionTitle] = useState('');
   const [motionDesc, setMotionDesc] = useState('');
 
-  const selectedParticipant = participants.find((p) => p.country_code === selectedCountry);
   const allCountries = COUNTRIES;
 
   const handleTimerStart = () => {
@@ -72,7 +67,7 @@ export default function AdminPanel({
       }}
     >
       {/* Header */}
-      <div className="px-5 py-4 border-b flex items-center gap-3" style={{ borderColor: 'var(--border)' }}>
+      <div className="px-4 sm:px-5 py-4 border-b flex items-center gap-3" style={{ borderColor: 'var(--border)' }}>
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
           style={{ background: 'var(--gold-dim)', border: '1px solid rgba(201,162,39,0.3)' }}
@@ -104,7 +99,7 @@ export default function AdminPanel({
         ))}
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <AnimatePresence mode="wait">
           {tab === 'timer' && (
             <motion.div
