@@ -48,10 +48,10 @@ export default function AdminPanel({
 
   const handleTimerStart = () => {
     if (!selectedCountry) return;
-    const country = allCountries.find((c) => c.code === selectedCountry);
+    const country = participants.find((p) => p.country_code === selectedCountry);
     if (!country) return;
     const secs = parseInt(customTime) || 60;
-    onTimerStart(selectedCountry, country.name, secs);
+    onTimerStart(selectedCountry, country.country_name, secs);
   };
 
   const handleMotionCreate = () => {
@@ -130,12 +130,12 @@ export default function AdminPanel({
                     {selectedCountry ? (
                       <>
                         <span className="text-lg">{allCountries.find((c) => c.code === selectedCountry)?.flag}</span>
-                        <span className="flex-1 truncate">{allCountries.find((c) => c.code === selectedCountry)?.name}</span>
+                        <span className="flex-1 truncate">{participants.find((p) => p.country_code === selectedCountry)?.country_name}</span>
                       </>
                     ) : (
                       <>
                         <Users size={14} />
-                        <span className="flex-1">Select delegate...</span>
+                        <span className="flex-1">Select active delegation...</span>
                       </>
                     )}
                     <ChevronDown size={14} className={showCountryDropdown ? 'rotate-180' : ''} style={{ transition: 'transform 0.2s' }} />
@@ -156,7 +156,7 @@ export default function AdminPanel({
                           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
                         }}
                       >
-                        {participants.length > 0 && (
+                        {participants.length > 0 ? (
                           <>
                             <div className="px-3 py-1.5 sticky top-0" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
                               <span className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
@@ -178,25 +178,11 @@ export default function AdminPanel({
                               );
                             })}
                           </>
+                        ) : (
+                          <div className="px-3 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                            No active delegations yet.
+                          </div>
                         )}
-                        <div className="px-3 py-1.5 sticky top-0" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
-                          <span className="text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                            All Countries
-                          </span>
-                        </div>
-                        {allCountries
-                          .filter((c) => !participants.some((p) => p.country_code === c.code))
-                          .map((c) => (
-                            <button
-                              key={c.code}
-                              onClick={() => { setSelectedCountry(c.code); setShowCountryDropdown(false); }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-white/5 transition-colors"
-                              style={{ color: selectedCountry === c.code ? 'var(--gold-light)' : 'var(--text-muted)' }}
-                            >
-                              <span className="text-base">{c.flag}</span>
-                              {c.name}
-                            </button>
-                          ))}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -239,7 +225,7 @@ export default function AdminPanel({
               <div className="flex gap-2">
                 <button
                   onClick={handleTimerStart}
-                  disabled={!selectedCountry || timerLoading}
+                  disabled={!selectedCountry || timerLoading || participants.length === 0}
                   className="btn btn-gold flex-1"
                 >
                   <Timer size={15} />
