@@ -169,6 +169,30 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
     channelRef.current = channel;
     return () => { supabase.removeChannel(channel); };
   }, [session]);
+
+  useEffect(() => {
+    const generateQrCode = async () => {
+      if (!session) {
+        setQrCodeDataUrl('');
+        return;
+      }
+
+      try {
+        const joinUrl = `${window.location.origin}/session/${session.id}`;
+        const dataUrl = await QRCode.toDataURL(joinUrl, {
+          width: 256,
+          margin: 1,
+          color: { dark: '#f0f4ff', light: '#0000' },
+        });
+        setQrCodeDataUrl(dataUrl);
+      } catch {
+        setQrCodeDataUrl('');
+      }
+    };
+
+    generateQrCode();
+  }, [session]);
+
   if (sessionLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
@@ -321,24 +345,6 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
   };
 
   const takenCodes = participants.map((p) => p.country_code);
-
-  useEffect(() => {
-    const generateQrCode = async () => {
-      try {
-        const joinUrl = `${window.location.origin}/session/${session.id}`;
-        const dataUrl = await QRCode.toDataURL(joinUrl, {
-          width: 256,
-          margin: 1,
-          color: { dark: '#f0f4ff', light: '#0000' },
-        });
-        setQrCodeDataUrl(dataUrl);
-      } catch {
-        setQrCodeDataUrl('');
-      }
-    };
-
-    generateQrCode();
-  }, [session.id]);
 
   return (
     <>
