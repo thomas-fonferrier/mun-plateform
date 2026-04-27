@@ -16,10 +16,13 @@ import AdminPanel from '@/components/AdminPanel';
 import QRCode from 'qrcode';
 
 interface SessionClientProps {
-  session: { id: string; name: string; created_at: string };
+  sessionId: string;
 }
 
-export default function SessionClient({ session }: SessionClientProps) {
+export default function SessionClient({ sessionId }: SessionClientProps) {
+  const [session, setSession] = useState<{ id: string; name: string; created_at: string } | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [sessionError, setSessionError] = useState('');
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [activeTimer, setActiveTimer] = useState<SpeakerTimer | null>(null);
@@ -49,6 +52,7 @@ export default function SessionClient({ session }: SessionClientProps) {
 
   // Load initial data
   const loadData = useCallback(async () => {
+    if (!session) return;
     const [{ data: parts }, { data: timers }, { data: mots }, { data: vs }] = await Promise.all([
       supabase.from('participants').select('*').eq('session_id', session.id).order('joined_at'),
       supabase.from('speaker_timers').select('*').eq('session_id', session.id).eq('is_active', true).order('started_at', { ascending: false }).limit(1),
@@ -64,14 +68,40 @@ export default function SessionClient({ session }: SessionClientProps) {
       const motionIds = (mots || []).map((m: Motion) => m.id);
       setVotes(vs.filter((v: Vote) => motionIds.includes(v.motion_id)));
     }
-  }, [session.id]);
+  }, [session]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    const loadSession = async () => {
+      setSessionLoading(true);
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('id, name, created_at')
+        .eq('id', sessionId)
+        .single();
+
+      if (error || !data) {
+        setSessionError('Session not found or unavailable.');
+        setSession(null);
+      } else {
+        setSession(data);
+        setSessionError('');
+      }
+
+      setSessionLoading(false);
+    };
+
+    loadSession();
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (session) {
+      loadData();
+    }
+  }, [session, loadData]);
 
   // Restore session from localStorage
   useEffect(() => {
+    if (!session) return;
     const storedToken = localStorage.getItem(`participant_token_${session.id}`);
     const storedAdminToken = localStorage.getItem(`admin_token_${session.id}`);
 
@@ -95,10 +125,11 @@ export default function SessionClient({ session }: SessionClientProps) {
       setAdminToken(storedAdminToken);
       setIsAdmin(true);
     }
-  }, [session.id]);
+  }, [session]);
 
   // Realtime subscriptions
   useEffect(() => {
+    if (!session) return;
     const channel = supabase
       .channel(`session:${session.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'participants', filter: `session_id=eq.${session.id}` }, (payload) => {
@@ -137,7 +168,30 @@ export default function SessionClient({ session }: SessionClientProps) {
 
     channelRef.current = channel;
     return () => { supabase.removeChannel(channel); };
-  }, [session.id]);
+  }, [session]);
+  if (sessionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Loading session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session || sessionError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="rounded-2xl p-6 text-center max-w-sm" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+          <h2 className="text-lg font-semibold mb-2">Unable to load session</h2>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            {sessionError || 'Please check the session link and try again.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
 
   const handleCountrySelect = async (country: { code: string; name: string; flag: string }) => {
     setJoiningLoading(true);
