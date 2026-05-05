@@ -14,6 +14,7 @@ import ActiveMotion from '@/components/ActiveMotion';
 import MotionHistory from '@/components/MotionHistory';
 import ParticipantsList from '@/components/ParticipantsList';
 import AdminPanel from '@/components/AdminPanel';
+import MotionProposalPanel from '@/components/MotionProposalPanel';
 import QRCode from 'qrcode';
 
 interface SessionClientProps {
@@ -50,6 +51,18 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const activeMotion = motions.find((m) => m.status === 'voting') || null;
+  const pendingMotions = motions
+    .filter((m) => m.status === 'proposed')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const latestProposerDecision = participant
+    ? motions
+      .filter(
+        (m) =>
+          m.proposer_country_code === participant.country_code &&
+          (m.status === 'voting' || m.status === 'ignored')
+      )
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] || null
+    : null;
   const motionVotes = activeMotion ? votes.filter((v) => v.motion_id === activeMotion.id) : [];
   const allVotes = votes;
 
@@ -316,6 +329,36 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
     }
   };
 
+  const handleMotionProposal = async (
+    title: string,
+    description: string,
+    motionType: 'set_agenda' | 'set_speaking_time' | 'moderated_caucus' | 'unmoderated_caucus'
+  ) => {
+    const token = localStorage.getItem(`participant_token_${session.id}`);
+    if (!token) return;
+    setMotionLoading(true);
+    try {
+      const res = await fetch('/api/motions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          title,
+          description,
+          participantToken: token,
+          motionType,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send motion');
+      alert('Motion proposal sent to the Chair.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to send motion.');
+    } finally {
+      setMotionLoading(false);
+    }
+  };
+
   const handleMotionClose = async (motionId: string, status: 'passed' | 'failed' | 'withdrawn') => {
     setMotionLoading(true);
     try {
@@ -324,6 +367,23 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ motionId, status, adminToken, sessionId: session.id }),
       });
+    } finally {
+      setMotionLoading(false);
+    }
+  };
+
+  const handleMotionDecision = async (motionId: string, decision: 'consider' | 'ignore') => {
+    setMotionLoading(true);
+    try {
+      const res = await fetch('/api/motions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motionId, decision, adminToken, sessionId: session.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Unable to process motion');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Unable to process motion');
     } finally {
       setMotionLoading(false);
     }
@@ -561,6 +621,34 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
               />
             </motion.div>
 
+            {/* Motion notifications */}
+            {latestProposerDecision && (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <div
+                  className="rounded-xl px-4 py-3 text-sm"
+                  style={{
+                    background: latestProposerDecision.status === 'voting' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                    border: `1px solid ${latestProposerDecision.status === 'voting' ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)'}`,
+                    color: latestProposerDecision.status === 'voting' ? '#86efac' : '#fca5a5',
+                  }}
+                >
+                  {latestProposerDecision.status === 'voting'
+                    ? `The Chair accepted your motion "${latestProposerDecision.title}" and opened a vote.`
+                    : `The Chair ignored your motion "${latestProposerDecision.title}".`}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Country motion proposal */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+              <MotionProposalPanel
+                participant={participant}
+                hasActiveMotion={Boolean(activeMotion)}
+                onPropose={handleMotionProposal}
+                loading={motionLoading}
+              />
+            </motion.div>
+
             {/* Motion history */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
               <div className="flex items-center gap-2 mb-3">
@@ -592,10 +680,12 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
                   <AdminPanel
                     participants={participants}
                     activeMotion={activeMotion}
+                    pendingMotions={pendingMotions}
                     onTimerStart={handleTimerStart}
                     onTimerStop={handleTimerStop}
                     onMotionCreate={handleMotionCreate}
                     onMotionClose={handleMotionClose}
+                    onMotionDecision={handleMotionDecision}
                     onEndSession={handleEndSession}
                     timerLoading={timerLoading}
                     motionLoading={motionLoading}

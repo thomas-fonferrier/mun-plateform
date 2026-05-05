@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Timer, FilePlus, ChevronDown, StopCircle, CheckCircle, XCircle, MinusCircle, ChevronRight, Users, Power } from 'lucide-react';
+import { Shield, Timer, FilePlus, ChevronDown, StopCircle, CheckCircle, XCircle, MinusCircle, ChevronRight, Users, Power, Gavel } from 'lucide-react';
 import { Motion, Participant } from '@/lib/types';
 import { COUNTRIES } from '@/lib/countries';
 
 interface AdminPanelProps {
   participants: Participant[];
   activeMotion: Motion | null;
+  pendingMotions: Motion[];
   onTimerStart: (countryCode: string, countryName: string, seconds: number) => void;
   onTimerStop: () => void;
   onMotionCreate: (title: string, description: string) => void;
   onMotionClose: (motionId: string, status: 'passed' | 'failed' | 'withdrawn') => void;
+  onMotionDecision: (motionId: string, decision: 'consider' | 'ignore') => void;
   onEndSession: () => void;
   timerLoading: boolean;
   motionLoading: boolean;
@@ -24,10 +26,12 @@ const PRESET_TIMES = [30, 60, 90, 120, 180, 300];
 export default function AdminPanel({
   participants,
   activeMotion,
+  pendingMotions,
   onTimerStart,
   onTimerStop,
   onMotionCreate,
   onMotionClose,
+  onMotionDecision,
   onEndSession,
   timerLoading,
   motionLoading,
@@ -276,6 +280,42 @@ export default function AdminPanel({
                         <Icon size={14} />
                         {label}
                       </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!activeMotion && pendingMotions.length > 0 && (
+                <div className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border)' }}>
+                  <p className="text-xs font-semibold mb-2" style={{ color: 'var(--gold)' }}>Pending Proposals</p>
+                  <div className="space-y-2.5">
+                    {pendingMotions.map((pending) => (
+                      <div key={pending.id} className="rounded-lg p-2.5" style={{ border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+                        <p className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
+                          {pending.proposer_country_name || 'Unknown delegation'}
+                        </p>
+                        <p className="text-sm font-medium">{pending.title}</p>
+                        {pending.description && (
+                          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{pending.description}</p>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => onMotionDecision(pending.id, 'consider')}
+                            disabled={motionLoading}
+                            className="btn btn-gold flex-1 text-xs"
+                          >
+                            <Gavel size={13} />
+                            Consider
+                          </button>
+                          <button
+                            onClick={() => onMotionDecision(pending.id, 'ignore')}
+                            disabled={motionLoading}
+                            className="btn btn-ghost flex-1 text-xs"
+                          >
+                            Ignore
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

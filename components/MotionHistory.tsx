@@ -11,7 +11,7 @@ interface MotionHistoryProps {
 }
 
 export default function MotionHistory({ motions, votes }: MotionHistoryProps) {
-  const closed = motions.filter((m) => m.status !== 'voting').sort(
+  const closed = motions.filter((m) => ['passed', 'failed', 'withdrawn', 'ignored'].includes(m.status)).sort(
     (a, b) => new Date(b.closed_at || b.created_at).getTime() - new Date(a.closed_at || a.created_at).getTime()
   );
 
@@ -52,6 +52,7 @@ function MotionHistoryCard({ motion: m, votes, index }: { motion: Motion; votes:
     passed: { color: '#22c55e', bg: 'rgba(34,197,94,0.1)', border: 'rgba(34,197,94,0.2)', label: 'Passed', icon: CheckCircle },
     failed: { color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.2)', label: 'Failed', icon: XCircle },
     withdrawn: { color: '#6b7280', bg: 'rgba(107,114,128,0.1)', border: 'rgba(107,114,128,0.2)', label: 'Withdrawn', icon: MinusCircle },
+    ignored: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)', label: 'Ignored', icon: MinusCircle },
   };
 
   const cfg = statusConfig[m.status as keyof typeof statusConfig] || statusConfig.withdrawn;

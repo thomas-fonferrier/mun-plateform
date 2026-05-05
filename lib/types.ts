@@ -30,7 +30,11 @@ export interface Motion {
   session_id: string;
   title: string;
   description: string | null;
-  status: 'voting' | 'passed' | 'failed' | 'withdrawn';
+  status: 'proposed' | 'voting' | 'passed' | 'failed' | 'withdrawn' | 'ignored';
+  motion_type: 'set_agenda' | 'set_speaking_time' | 'moderated_caucus' | 'unmoderated_caucus' | null;
+  proposer_participant_id: string | null;
+  proposer_country_code: string | null;
+  proposer_country_name: string | null;
   created_at: string;
   closed_at: string | null;
 }
