@@ -35,6 +35,9 @@ export interface Motion {
   proposer_participant_id: string | null;
   proposer_country_code: string | null;
   proposer_country_name: string | null;
+  attachment_storage_path: string | null;
+  attachment_filename: string | null;
+  attachment_mime: string | null;
   created_at: string;
   closed_at: string | null;
 }

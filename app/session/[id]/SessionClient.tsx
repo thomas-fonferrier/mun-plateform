@@ -332,22 +332,24 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
   const handleMotionProposal = async (
     title: string,
     description: string,
-    motionType: 'set_agenda' | 'set_speaking_time' | 'moderated_caucus' | 'unmoderated_caucus'
+    motionType: 'set_agenda' | 'set_speaking_time' | 'moderated_caucus' | 'unmoderated_caucus',
+    attachment: File | null
   ) => {
     const token = localStorage.getItem(`participant_token_${session.id}`);
     if (!token) return;
     setMotionLoading(true);
     try {
+      const form = new FormData();
+      form.append('sessionId', session.id);
+      form.append('title', title);
+      form.append('description', description);
+      form.append('participantToken', token);
+      form.append('motionType', motionType);
+      if (attachment) form.append('attachment', attachment);
+
       const res = await fetch('/api/motions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: session.id,
-          title,
-          description,
-          participantToken: token,
-          motionType,
-        }),
+        body: form,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to send motion');
@@ -356,6 +358,22 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
       alert(error instanceof Error ? error.message : 'Failed to send motion.');
     } finally {
       setMotionLoading(false);
+    }
+  };
+
+  const handleOpenMotionAttachment = async (motionId: string) => {
+    if (!isAdmin || !adminToken) return;
+    try {
+      const res = await fetch('/api/motions/attachment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motionId, sessionId: session.id, adminToken }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to open attachment');
+      window.open(data.url as string, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to open attachment');
     }
   };
 
@@ -405,7 +423,7 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
     if (!session || !isAdmin) return;
 
     const confirmed = window.confirm(
-      'End this session for everyone? This will permanently remove the session and all related data.'
+      'End this session for everyone? A PDF summarizing all motions that were put to a vote will download, then the session and its data will be permanently removed.'
     );
     if (!confirmed) return;
 
@@ -417,10 +435,30 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
         body: JSON.stringify({ sessionId: session.id, adminToken }),
       });
 
-      const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to end session');
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error || 'Failed to end session');
       }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/pdf')) {
+        throw new Error('Server did not return a PDF summary.');
+      }
+
+      const blob = await res.blob();
+      const cd = res.headers.get('Content-Disposition') || '';
+      const match = /filename="([^"]+)"/i.exec(cd);
+      const safeName = session.name.replace(/[^a-zA-Z0-9-_]+/g, '_').replace(/_+/g, '_').slice(0, 80) || 'session';
+      const filename = match?.[1] || `${safeName}-motions-summary.pdf`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
 
       localStorage.removeItem(`admin_token_${session.id}`);
       localStorage.removeItem(`participant_token_${session.id}`);
@@ -618,6 +656,8 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
                 myParticipant={participant}
                 onVote={handleVote}
                 votingLoading={votingLoading}
+                isAdmin={isAdmin}
+                onOpenMotionAttachment={isAdmin ? handleOpenMotionAttachment : undefined}
               />
             </motion.div>
 
@@ -686,6 +726,7 @@ export default function SessionClient({ sessionId }: SessionClientProps) {
                     onMotionCreate={handleMotionCreate}
                     onMotionClose={handleMotionClose}
                     onMotionDecision={handleMotionDecision}
+                    onOpenMotionAttachment={handleOpenMotionAttachment}
                     onEndSession={handleEndSession}
                     timerLoading={timerLoading}
                     motionLoading={motionLoading}

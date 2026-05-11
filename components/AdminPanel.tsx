@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Timer, FilePlus, ChevronDown, StopCircle, CheckCircle, XCircle, MinusCircle, ChevronRight, Users, Power, Gavel } from 'lucide-react';
+import { Shield, Timer, FilePlus, ChevronDown, StopCircle, CheckCircle, XCircle, MinusCircle, ChevronRight, Users, Power, Gavel, Paperclip } from 'lucide-react';
 import { Motion, Participant } from '@/lib/types';
 import { COUNTRIES } from '@/lib/countries';
 
@@ -15,6 +15,7 @@ interface AdminPanelProps {
   onMotionCreate: (title: string, description: string) => void;
   onMotionClose: (motionId: string, status: 'passed' | 'failed' | 'withdrawn') => void;
   onMotionDecision: (motionId: string, decision: 'consider' | 'ignore') => void;
+  onOpenMotionAttachment: (motionId: string) => void;
   onEndSession: () => void;
   timerLoading: boolean;
   motionLoading: boolean;
@@ -32,6 +33,7 @@ export default function AdminPanel({
   onMotionCreate,
   onMotionClose,
   onMotionDecision,
+  onOpenMotionAttachment,
   onEndSession,
   timerLoading,
   motionLoading,
@@ -263,6 +265,16 @@ export default function AdminPanel({
                 >
                   <p className="text-xs font-semibold mb-1" style={{ color: 'var(--gold)' }}>Active Motion</p>
                   <p className="text-sm font-medium mb-3">{activeMotion.title}</p>
+                  {activeMotion.attachment_storage_path && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenMotionAttachment(activeMotion.id)}
+                      className="btn btn-ghost text-xs py-1.5 mb-2 w-full justify-center gap-1.5"
+                    >
+                      <Paperclip size={13} />
+                      Open attachment{activeMotion.attachment_filename ? ` (${activeMotion.attachment_filename})` : ''}
+                    </button>
+                  )}
                   <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Close this motion as:</p>
                   <div className="grid grid-cols-3 gap-2">
                     {([
@@ -295,8 +307,20 @@ export default function AdminPanel({
                           {pending.proposer_country_name || 'Unknown delegation'}
                         </p>
                         <p className="text-sm font-medium">{pending.title}</p>
-                        {pending.description && (
+                        {pending.description ? (
                           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{pending.description}</p>
+                        ) : (
+                          <p className="text-xs mt-1 italic" style={{ color: 'var(--text-muted)' }}>No description provided.</p>
+                        )}
+                        {pending.attachment_storage_path && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenMotionAttachment(pending.id)}
+                            className="btn btn-ghost text-xs py-1.5 mt-2 w-full justify-center gap-1.5"
+                          >
+                            <Paperclip size={13} />
+                            Open attachment{pending.attachment_filename ? ` (${pending.attachment_filename})` : ''}
+                          </button>
                         )}
                         <div className="flex gap-2 mt-2">
                           <button

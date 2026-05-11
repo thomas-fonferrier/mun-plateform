@@ -1,7 +1,7 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Vote, CheckCircle, XCircle, MinusCircle, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Vote, CheckCircle, XCircle, MinusCircle, FileText, Paperclip } from 'lucide-react';
 import { Motion, Vote as VoteType, Participant } from '@/lib/types';
 
 interface ActiveMotionProps {
@@ -10,6 +10,8 @@ interface ActiveMotionProps {
   myParticipant: Participant | null;
   onVote: (motionId: string, vote: 'for' | 'against' | 'abstain') => void;
   votingLoading: boolean;
+  isAdmin?: boolean;
+  onOpenMotionAttachment?: (motionId: string) => void;
 }
 
 export default function ActiveMotion({
@@ -18,6 +20,8 @@ export default function ActiveMotion({
   myParticipant,
   onVote,
   votingLoading,
+  isAdmin,
+  onOpenMotionAttachment,
 }: ActiveMotionProps) {
   if (!currentMotion) {
     return (
@@ -89,6 +93,18 @@ export default function ActiveMotion({
               <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                 {currentMotion.description}
               </p>
+            )}
+            {isAdmin && onOpenMotionAttachment && currentMotion.attachment_storage_path && (
+              <button
+                type="button"
+                onClick={() => onOpenMotionAttachment(currentMotion.id)}
+                className="mt-2 inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-colors"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)', color: 'var(--gold-light)' }}
+              >
+                <Paperclip size={13} />
+                Open delegate attachment
+                {currentMotion.attachment_filename ? ` (${currentMotion.attachment_filename})` : ''}
+              </button>
             )}
           </div>
         </div>
